@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:hello_world/todo.dart';
-import 'package:hello_world/todoItems.dart';
+import 'package:todo_app/todo.dart';
+import 'package:todo_app/todoItems.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
