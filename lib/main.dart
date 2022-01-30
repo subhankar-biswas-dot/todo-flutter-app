@@ -1,18 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:hello_world/todo.dart';
+import 'package:hello_world/todoItems.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(RootRestorationScope(
-    restorationId: 'root',
-    child: MaterialApp(
+  runApp(
+    MaterialApp(
       home: TodoList(),
     ),
-  ));
-}
-
-class Todo {
-  Todo({required this.name, required this.checked});
-  final String name;
-  bool checked;
+  );
 }
 
 class TodoList extends StatefulWidget {
@@ -20,41 +18,22 @@ class TodoList extends StatefulWidget {
   _TodoListState createState() => _TodoListState();
 }
 
-class TodoItem extends StatelessWidget {
-  TodoItem({
-    required this.todo,
-    required this.onTodoChanged,
-  }) : super(key: ObjectKey(todo));
+class _TodoListState extends State<TodoList> {
+  List<Todo> _todoList = <Todo>[];
+  final TextEditingController _textFieldController = TextEditingController();
 
-  final Todo todo;
-  final onTodoChanged;
-
-  TextStyle? _getTextStyle(bool checked) {
-    if (!checked) return null;
-
-    return TextStyle(
-      color: Colors.black54,
-      decoration: TextDecoration.lineThrough,
-    );
-  }
+  late SharedPreferences sharedPreferences;
 
   @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: () {
-        onTodoChanged(todo);
-      },
-      leading: CircleAvatar(
-        child: Text(todo.name[0]),
-      ),
-      title: Text(todo.name, style: _getTextStyle(todo.checked)),
-    );
+  void initState() {
+    initSharedPreferences();
+    super.initState();
   }
-}
 
-class _TodoListState extends State<TodoList> {
-  final List<Todo> _todoList = <Todo>[];
-  final TextEditingController _textFieldController = TextEditingController();
+  initSharedPreferences() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    loadData();
+  }
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,6 +54,7 @@ class _TodoListState extends State<TodoList> {
     setState(() {
       _todoList.add(Todo(name: name, checked: false));
     });
+    saveData();
     _textFieldController.clear();
   }
 
@@ -116,5 +96,19 @@ class _TodoListState extends State<TodoList> {
     setState(() {
       todo.checked = !todo.checked;
     });
+    saveData();
+  }
+
+  void saveData() {
+    List<String> spList =
+        _todoList.map((items) => json.encode(items.toMap())).toList();
+
+    sharedPreferences.setStringList('list', spList);
+  }
+
+  void loadData() {
+    List<String>? spList = sharedPreferences.getStringList('list');
+    _todoList = spList!.map((item) => Todo.fromMap(json.decode(item))).toList();
+    setState(() {});
   }
 }
